@@ -1,0 +1,28 @@
+name: Pipeline-to-AWS-ElasticBeastalk
+env:
+  EB_PACKAGE_S3_BUCKET_NAME: "github-actions-project-packages"
+  EB_APPLICATION_NAME: "DevOpsNodeJSProject"
+  EB_ENVIRONMENT_NAME: "Devopsnodejsproject-env"
+  DEPLOY_PACKAGE_NAME: "node_js_app_${{ github.sha }}.zip"
+  AWS_REGION_NAME: "us-west-2"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+     runs-on: ubuntu-latest
+
+     steps:
+     - name: Clone Repository
+       uses: actions/checkout@v2
+
+     - name: Create zip deployment package 
+       run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
+
+     
+
+
+
