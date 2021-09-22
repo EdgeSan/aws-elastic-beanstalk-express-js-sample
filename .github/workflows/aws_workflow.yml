@@ -22,7 +22,7 @@ jobs:
      - name: Create zip deployment package 
        run: zip -r ${{ env.DEPLOY_PACKAGE_NAME }} ./ -x *.git*
     
-     - name: AWS Credentials
+     - name: Authenticate with AWS Credentials
        uses: aws-actions/configure-aws-credentials@v1
        with:
          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
@@ -34,6 +34,36 @@ jobs:
 
      - name: Success message if ok
        run: echo "CI pipeline part finished successfully!"
+
+  deploy:
+     runs-on: ubuntu-latest
+     needs: [build]
+
+     steps:
+     - name: Authenticate with AWS Credentials
+       uses: aws-actions/configure-aws-credentials@v1
+       with:
+         aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.ACCESS_KEY_SECRET }}
+         aws-region: ${{ env.AWS_REGION_NAME }}
+
+     - name: Create new ElasticBeanstalk Application 
+       run: |
+         aws elasticbeanstalk create-application-version \
+         --application-name ${{ env.EB_APPLICATION_NAME }} \
+         --source-bundle S3Bucket="${{ env.EB_PACKAGE_S3_BUCKET_NAME }}",S3Key="${{ env.DEPLOY_PACKAGE_NAME }}" \
+         --version-label "ver-${{ github.sha }}" \
+         --description "CommitSHA-${{ github.sha }}"
+
+     - name: Deploy new ElasticBeanstalk Application Version 
+       run: aws elasticbeanstalk update-environment --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --version-label "ver-${{ github.sha }}"
+
+     - name: Success message if ok
+       run: echo "CD pipeline part finished successfully!"
+       
+
+
+      
 
 
      
